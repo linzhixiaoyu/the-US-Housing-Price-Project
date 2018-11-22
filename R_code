@@ -1,0 +1,54 @@
+house=c(1:263)
+for(i in 1:263){
+  house[i]=H9517[i,2]
+}
+#change data to time series
+sal=ts(as.double(house), start=c(1995,1), end=c(2016, 11), frequency=12 ) #change data to time series
+
+plot(sal, main="Sales of new one-family houses", ylab="Sales (thousands)", xlab="Time (month)")
+acf2(sal,main="Sales of new one-family houses", 100)
+
+plot(diff(sal), main="First difference of sales of new one-family houses", ylab="Sales (thousands)", xlab="Time (month)")
+acf2(diff(sal), main="First difference of sales of new one-family houses", 100)
+#compare variance of first half and second half of the data
+dsal=diff(sal)
+l=length(dsal)
+a=var(dsal[1:l/2])
+b=var(dsal[(l/2+1):l])
+sqrt(a/b)
+
+plot(diff(diff(sal), lag=12), main="Seasonal difference of first difference of sold new one-family houses", ylab="Sales (thousands)", xlab="Time (month)" )
+acf2(diff(diff(sal), lag=12), main="Seasonal difference of first difference of sold new one-family houses", 100)
+#compare variance of first half and second half of the data
+sdsal=diff(diff(sal), lag=12)
+k=length(sdsal)
+a=var(sdsal[1:k/2])
+b=var(sdsal[(k/2+1):k])
+sqrt(a/b)
+
+sarima(sal, 1, 1, 4, 1, 1, 1, 12)
+
+#prediction 
+fore=sarima.for(sal, 10, 1, 1, 4, 1, 1, 1, 12, no.constant=TRUE)$pred
+U=fore+sarima.for(sal, 10, 1, 1, 4, 1, 1, 1, 12, no.constant=TRUE)$se
+U2=fore+2*sarima.for(sal, 10, 1, 1, 4, 1, 1, 1, 12, no.constant=TRUE)$se
+L=fore-sarima.for(sal, 10, 1, 1, 4, 1, 1, 1, 12,no.constant=TRUE)$se
+L2=fore-2*sarima.for(sal, 10, 1, 1, 4, 1, 1, 1, 12,no.constant=TRUE)$se
+
+ts.plot(sal, fore, col=1:2, xlim=c(2015,2018), ylim=c(10, 80), main="predction of sales of new one-family houses", ylab="Sales (thousands)", xlab="Time (month)")
+lines(fore, col="red", type="o")
+lines(U, col="blue", lty="dashed")
+lines(L, col="blue", lty="dashed")
+lines(U2, col="blue", lty='solid')
+lines(L2, col="blue", lty="solid")
+legend(2015, 80, legend=c("real values","prediction","one standard error", "two standard error" ), 
+       col=c("black","red","blue", "blue"), lty=c(1,1,2,1))
+
+#compare with real values
+real=c(1:10)
+for(i in 1:10){
+  real[i]=H9517[i+263,2]
+}
+
+real=ts(as.double(real), start=c(2016,12), end=c(2017, 9), frequency=12 )
+lines(real, col="black") 
